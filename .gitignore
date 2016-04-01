@@ -1,0 +1,13 @@
+.idea/
+CMakeFiles/
+CMakeCache.txt
+CMakeScripts
+Makefile
+cmake_install.cmake
+install_manifest.txt
+*.fits
+radio_output.txt
+*.log
+bin/config/extras/
+*~
+bin/radio
