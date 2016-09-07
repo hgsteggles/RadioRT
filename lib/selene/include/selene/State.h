@@ -1,6 +1,5 @@
 #pragma once
 
-#include "ExceptionHandler.h"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -16,20 +15,17 @@ private:
     lua_State *_l;
     bool _l_owner;
     std::unique_ptr<Registry> _registry;
-    std::unique_ptr<ExceptionHandler> _exception_handler;
 
 public:
     State() : State(false) {}
-    State(bool should_open_libs) : _l(nullptr), _l_owner(true), _exception_handler(new ExceptionHandler) {
+    State(bool should_open_libs) : _l(nullptr), _l_owner(true) {
         _l = luaL_newstate();
         if (_l == nullptr) throw 0;
         if (should_open_libs) luaL_openlibs(_l);
         _registry.reset(new Registry(_l));
-        HandleExceptionsPrintingToStdOut();
     }
-    State(lua_State *l) : _l(l), _l_owner(false), _exception_handler(new ExceptionHandler) {
+    State(lua_State *l) : _l(l), _l_owner(false) {
         _registry.reset(new Registry(_l));
-        HandleExceptionsPrintingToStdOut();
     }
     State(const State &other) = delete;
     State &operator=(const State &other) = delete;
@@ -60,36 +56,10 @@ public:
     }
 
     bool Load(const std::string &file) {
-        ResetStackOnScopeExit savedStack(_l);
-        int status = luaL_loadfile(_l, file.c_str());
-#if LUA_VERSION_NUM >= 502
-        auto const lua_ok = LUA_OK;
-#else
-        auto const lua_ok = 0;
-#endif
-        if (status != lua_ok) {
-            if (status == LUA_ERRSYNTAX) {
-                const char *msg = lua_tostring(_l, -1);
-                _exception_handler->Handle(status, msg ? msg : file + ": syntax error");
-            } else if (status == LUA_ERRFILE) {
-                const char *msg = lua_tostring(_l, -1);
-                _exception_handler->Handle(status, msg ? msg : file + ": file error");
-            }
-            return false;
-        }
-
-        status = lua_pcall(_l, 0, LUA_MULTRET, 0);
-        if(status == lua_ok) {
-            return true;
-        }
-
-        const char *msg = lua_tostring(_l, -1);
-        _exception_handler->Handle(status, msg ? msg : file + ": dofile failed");
-        return false;
+        return !luaL_dofile(_l, file.c_str());
     }
 
     void OpenLib(const std::string& modname, lua_CFunction openf) {
-        ResetStackOnScopeExit savedStack(_l);
 #if LUA_VERSION_NUM >= 502
         luaL_requiref(_l, modname.c_str(), openf, 1);
 #else
@@ -99,27 +69,36 @@ public:
 #endif
     }
 
-    void HandleExceptionsPrintingToStdOut() {
-        *_exception_handler = ExceptionHandler([](int, std::string msg, std::exception_ptr){_print(msg);});
+    void Push() {} // Base case
+
+    template <typename T, typename... Ts>
+    void Push(T &&value, Ts&&... values) {
+        detail::_push(_l, std::forward<T>(value));
+        Push(std::forward<Ts>(values)...);
     }
 
-    void HandleExceptionsWith(ExceptionHandler::function handler) {
-        *_exception_handler = ExceptionHandler(std::move(handler));
+    // Lua stacks are 1 indexed from the bottom and -1 indexed from
+    // the top
+    template <typename T>
+    T Read(const int index) const {
+        return detail::_get(detail::_id<T>{}, _l, index);
     }
 
+    bool CheckNil(const std::string &global) {
+        lua_getglobal(_l, global.c_str());
+        const bool result = lua_isnil(_l, -1);
+        lua_pop(_l, 1);
+        return result;
+    }
 public:
     Selector operator[](const char *name) {
-        return Selector(_l, *_registry, *_exception_handler, name);
+        return Selector(_l, *_registry, name);
     }
 
     bool operator()(const char *code) {
-        ResetStackOnScopeExit savedStack(_l);
-        int status = luaL_dostring(_l, code);
-        if(status) {
-            _exception_handler->Handle_top_of_stack(status, _l);
-            return false;
-        }
-        return true;
+        bool result = !luaL_dostring(_l, code);
+        if(result) lua_settop(_l, 0);
+        return result;
     }
     void ForceGC() {
         lua_gc(_l, LUA_GCCOLLECT, 0);

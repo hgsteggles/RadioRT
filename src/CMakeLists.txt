@@ -19,9 +19,8 @@ set(RADIO_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/WriteFITS2D.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/faddeeva/Faddeeva.cpp)
 
-message(WARNING "type " "${RADIO_SOURCE_DIR}/lib/selene/include")
-
 include_directories("${RADIO_SOURCE_DIR}/lib")
+include_directories("${RADIO_SOURCE_DIR}/lib/lua-5.2.3")
 
 add_executable(radio ${RADIO_SRCS})
 #target_link_libraries(radio ${LUA_LIBRARIES} cfitsio)

@@ -1,13 +1,11 @@
 #pragma once
 
-#include "ExceptionHandler.h"
 #include <iostream>
-#include <utility>
 
 extern "C" {
-#include "lua5.2/lua.h"
-#include "lua5.2/lauxlib.h"
-#include "lua5.2/lualib.h"
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
 }
 
 namespace sel {
@@ -55,43 +53,5 @@ inline bool check(lua_State *L, int code) {
         std::cout << lua_tostring(L, -1) << std::endl;
         return false;
     }
-}
-
-inline int Traceback(lua_State *L) {
-    // Make nil and values not convertible to string human readable.
-    const char* msg = "<not set>";
-    if (!lua_isnil(L, -1)) {
-        msg = lua_tostring(L, -1);
-        if (!msg)
-            msg = "<error object>";
-    }
-    lua_pushstring(L, msg);
-
-    // call debug.traceback
-    lua_getglobal(L, "debug");
-    lua_getfield(L, -1, "traceback");
-    lua_pushvalue(L, -3);
-    lua_pushinteger(L, 2);
-    lua_call(L, 2, 1);
-
-    return 1;
-}
-
-inline int ErrorHandler(lua_State *L) {
-    if(test_stored_exception(L) != nullptr) {
-        return 1;
-    }
-
-    return Traceback(L);
-}
-
-inline int SetErrorHandler(lua_State *L) {
-    lua_pushcfunction(L, &ErrorHandler);
-    return lua_gettop(L);
-}
-
-template<typename T, typename... Args>
-std::unique_ptr<T> make_unique(Args&&... args) {
-    return std::unique_ptr<T>(new T(std::forward<Args>(args)...));
 }
 }
