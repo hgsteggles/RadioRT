@@ -6,6 +6,7 @@
 #define RADIO_CELLGRID_HPP
 
 #include <vector>
+#include <algorithm>
 
 #include "Cell.hpp"
 
@@ -47,6 +48,11 @@ public:
 
 	const Cell& operator()(const unsigned int ix, const unsigned int iy, const unsigned int iz) const {
 		return vector3D[ix][iy][iz];
+	}
+
+	void flip() {
+		for (int i = 0; i < sizex(); ++i)
+			std::reverse(vector3D[i].begin(), vector3D[i].end());
 	}
 
 private:

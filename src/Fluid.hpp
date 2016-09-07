@@ -35,6 +35,8 @@ public:
 	static std::array<double, 4> getElectrons(double nhii, double nhe, double ncno, double tem);
 	static double calcTemperature(double hii, double pre, double den, double massFractionH);
 
+	void flip();
+
 private:
 	double dx = 0;
 	CellGrid cells;

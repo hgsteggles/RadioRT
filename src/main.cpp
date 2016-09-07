@@ -7,11 +7,7 @@
 #include "RadioRT_Parameters.hpp"
 #include "ParseLua.hpp"
 
-#include "lib/selene/include/selene.h"
-
-//extern void readinfits_3d();
-//extern void integ(double slice_ff[][jmax], double slice_gam[][jmax]);
-//extern void wfits2d(char filename[], char filetype[], char units[], int imx, int imy, double z[], double pixs, double pixsize, double rb, double rapos, double decpos, double im_max);
+#include "selene/include/selene.h"
 
 void parseParameters(const std::string& filename, RadioRT_Parameters& params);
 void showUsage();
@@ -66,7 +62,7 @@ int main(int argc, char *argv[]) {
 void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 	// Create new Lua state and load the lua libraries.
 	sel::State luaState{true};
-	luaState.HandleExceptionsWith([](int, std::string msg, std::exception_ptr){ throw std::runtime_error(msg);});
+	//luaState.HandleExceptionsWith([](int, std::string msg, std::exception_ptr){ throw std::runtime_error(msg);});
 
 	if (!luaState.Load(filename)) {
 		throw std::runtime_error("ParseParameters: could not open lua file: " + filename);
@@ -110,7 +106,7 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 	}
 
 	sel::State luaState2{true};
-	luaState2.HandleExceptionsWith([](int, std::string msg, std::exception_ptr){ throw std::runtime_error(msg);});
+	//luaState2.HandleExceptionsWith([](int, std::string msg, std::exception_ptr){ throw std::runtime_error(msg);});
 
 	if (!luaState2.Load(params.torchParamFilename)) {
 		throw std::runtime_error("ParseParameters: could not open lua file: " + params.torchParamFilename);

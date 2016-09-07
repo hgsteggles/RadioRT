@@ -50,6 +50,8 @@ public:
 	double intensityRL = 0;
 
 	double fac = 0;
+
+	void flip();
 };
 
 class TrigData {

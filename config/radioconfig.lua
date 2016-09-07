@@ -1,7 +1,7 @@
 -- RadioRT Parameters
 Parameters = {
 	torch_params_filename =      "config/parameters.lua",
-	torch_data_filename =        "config/data2D_025.txt",
+	torch_data_filename =        "config/example-data.txt",
 	output_directory =           "tmp/",
 
 	sampling =                   4.0,

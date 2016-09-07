@@ -1,26 +1,36 @@
 cmake_minimum_required(VERSION 2.6)
-project (radio)
+project(RADIO)
+
+if(CMAKE_COMPILER_IS_GNUCXX)
+   set(ENABLE_CXX11 "-std=c++11")
+
+   execute_process(COMMAND "${CMAKE_CXX_COMPILER} -dumpversion" OUTPUT_VARIABLE GCC_VERSION)
+   if (GCC_VERSION VERSION_LESS 4.7)
+      set(ENABLE_CXX11 "-std=c++0x")
+   endif()
+endif()
 
 if(APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -stdlib=libc++")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${ENABLE_CXX11} -stdlib=libc++")
 elseif(UNIX)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${ENABLE_CXX11}")
 elseif(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ${ENABLE_CXX11}")
 endif(APPLE)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/build)
+configure_file(config/radioconfig.lua 
+				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/radioconfig.lua 
+				COPYONLY)
+configure_file(config/parameters.lua 
+				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/parameters.lua 
+				COPYONLY)
 
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR})
-
-set(PROJECT_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
-
-include_directories("${PROJECT_INCLUDE_DIR}")
-include_directories("${PROJECT_SOURCE_DIR}")
+configure_file(config/example-data.txt 
+				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/example-data.txt 
+				COPYONLY)
 
 add_subdirectory(lib/cfitsio)
-add_subdirectory(lib/selene)
-add_subdirectory(radio)
+add_subdirectory(src)

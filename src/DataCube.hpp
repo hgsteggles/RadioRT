@@ -11,6 +11,7 @@
 #include <vector>
 #include <cmath>
 #include <iostream>
+#include <algorithm>
 
 class DataCube {
 public:
@@ -71,6 +72,11 @@ public:
 		}
 
 		return *this;
+	}
+
+	void flip() {
+		for (int i = 0; i < sizex(); ++i)
+			std::reverse(vector3D[i].begin(), vector3D[i].end());
 	}
 
 private:

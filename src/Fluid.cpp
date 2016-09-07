@@ -250,4 +250,8 @@ double Fluid::calcTemperature(double hii, double pre, double den,
 	return (pre/den)*(1.0/mu_inv)/Constants::specificGas();
 }
 
+void Fluid::flip() {
+	cells.flip();
+}
+
 

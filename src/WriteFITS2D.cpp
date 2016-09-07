@@ -20,8 +20,8 @@
 
 #include "WriteFITS2D.hpp"
 
-#include "lib/cfitsio/fitsio.h"      //  For FITSIO (from cfitsio directory)
-#include "lib/cfitsio/longnam.h"     //  For FITSIO (from cfitsio directory)
+#include "cfitsio/fitsio.h"      //  For FITSIO (from cfitsio directory)
+#include "cfitsio/longnam.h"     //  For FITSIO (from cfitsio directory)
 
 #include <iostream>
 #include <stdio.h>

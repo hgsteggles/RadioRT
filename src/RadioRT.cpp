@@ -40,10 +40,13 @@ void RadioRT::run() {
 		fluid.updateDepartureCoeffs("refdata/bsubn.txt");
 	}
 
-	if (params.theta < 0.0 || params.theta > 180.0)
+	if (params.theta < -90.0 || params.theta > 90.0)
 		throw std::runtime_error("RadioRT::run: theta is out of range (0 <= th <= 180).");
 	if (params.phi < 0.0 || params.phi > 360.0)
 		throw std::runtime_error("RadioRT::run: phi is out of range (0 <= ph <= 360).");
+
+	if (params.theta < 90.0)
+		fluid.flip();
 
 	// Set the number of pixels in the ray-traced image (npixels[0] and npixels[1])
 	std::array<int, 2> npixels;
@@ -77,7 +80,10 @@ void RadioRT::run() {
 
 	RayTracerData data;
 	if (params.geometry == "cylindrical")
-		data = raytracer.rayTraceAxiSymm(fluid, theta_rad);
+		data = raytracer.rayTraceAxiSymm(fluid, std::abs(theta_rad));
+
+	if (params.theta < 90.0)
+		data.flip();
 
 	// Scale to correct units and work out total flux
 	double pixsize = data.fac*fluid.getDeltaX(); // pixel size [cm].
@@ -89,18 +95,18 @@ void RadioRT::run() {
 
 	double rbeam_rad = Converter::DEG_2_RAD(params.rbeam_degrees);
 
-	data.intensityFF *= Units::milli() * Converter::CGS_2_JY(1.0) * pixrad * pixrad; //mJy
-	data.intensityRL *= Units::milli() * Converter::CGS_2_JY(1.0) * pixrad * pixrad;
+	data.intensityFF *= Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad; //mJy
+	data.intensityRL *= Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad;
 	data.fluxFF.mul(Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad);
 	data.fluxRL.mul(Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad);
 
 	data.emissionMeasureFF.mul(Converter::CM_2_PC(1.0));
 	data.emissionMeasureRL.mul(Converter::CM_2_PC(1.0));
 
-	double pix2beam = rbeam_rad * rbeam_rad / (pixrad * pixrad);
+	double pix2beam = Constants::PI() * rbeam_rad * rbeam_rad / (std::log(2) * pixrad * pixrad);
 
-	DataCube fluxFF_beam = data.fluxFF * Constants::PI() * pix2beam;
-	DataCube fluxRL_beam = data.fluxRL * Constants::PI() * pix2beam;
+	DataCube fluxFF_beam = data.fluxFF * pix2beam;
+	DataCube fluxRL_beam = data.fluxRL * pix2beam;
 	double intensityFF_beam = data.intensityFF * pix2beam;
 	double intensityRL_beam = data.intensityRL * pix2beam;
 
@@ -108,13 +114,13 @@ void RadioRT::run() {
 		WriteFITS::wfits(params.outputDirectory + "odepth_ff", "", data.tauFF, params, pixdeg, pixsize, fluid.getDeltaX());
 		WriteFITS::wfits(params.outputDirectory + "emeasure_ff", "cm**6/pc", data.emissionMeasureFF, params, pixdeg, pixsize, fluid.getDeltaX());
 		WriteFITS::wfits(params.outputDirectory + "intensity_pixel_ff", "mJy/pixel", data.fluxFF, params, pixdeg, pixsize, fluid.getDeltaX(), data.intensityFF);
-		WriteFITS::wfits(params.outputDirectory + "intensity_beam_ff", "mJy/pixel", fluxFF_beam, params, pixdeg, pixsize, fluid.getDeltaX(), intensityFF_beam);
+		WriteFITS::wfits(params.outputDirectory + "intensity_beam_ff", "mJy/beam", fluxFF_beam, params, pixdeg, pixsize, fluid.getDeltaX(), intensityFF_beam);
 	}
 	if (params.integratingRL) {
 		WriteFITS::wfits(params.outputDirectory + "odepth_rl", "", data.tauRL, params, pixdeg, pixsize, fluid.getDeltaX());
 		WriteFITS::wfits(params.outputDirectory + "emeasure_rl", "cm**6/pc", data.emissionMeasureRL, params, pixdeg, pixsize, fluid.getDeltaX());
 		WriteFITS::wfits(params.outputDirectory + "intensity_pixel_rl", "mJy/pixel", data.fluxRL, params, pixdeg, pixsize, fluid.getDeltaX(), data.intensityRL);
-		WriteFITS::wfits(params.outputDirectory + "intensity_beam_rl", "mJy/pixel", fluxRL_beam, params, pixdeg, pixsize, fluid.getDeltaX(), intensityRL_beam);
+		WriteFITS::wfits(params.outputDirectory + "intensity_beam_rl", "mJy/beam", fluxRL_beam, params, pixdeg, pixsize, fluid.getDeltaX(), intensityRL_beam);
 	}
 
 	std::cout << "Progam time taken: " << timer.formatTime(timer.getTicks()) << std::endl;

@@ -11,6 +11,15 @@
 #include "ProgressBar.hpp"
 #include "RecombinationLine.hpp"
 
+void RayTracerData::flip() {
+	fluxFF.flip();
+	tauFF.flip();
+	emissionMeasureFF.flip();
+
+	fluxRL.flip();
+	tauRL.flip();
+	emissionMeasureRL.flip();
+}
 
 TrigData::TrigData(double theta)
 : sin_th(std::sin(theta))
