@@ -8,7 +8,6 @@ Parameters = {
 	dopplerShifted =             false,
 	dopp_shift_phi_inc =         0.01,
 
-	rbeam_degrees =              (3.4/2.0)/3600.0,
 	distance =                   1.5,
 	right_ascension =            308.94617775,
 	declination =                41.379058775,
