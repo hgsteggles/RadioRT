@@ -6,24 +6,17 @@
 #include "RadioRT.hpp"
 #include "RadioRT_Parameters.hpp"
 #include "ParseLua.hpp"
+#include "FileManagement.hpp"
 
 #include "selene/include/selene.h"
 
 void parseParameters(const std::string& filename, RadioRT_Parameters& params);
 void showUsage();
-int do_mkdir(const char *path, mode_t mode);
-int mkpath(const char *path, mode_t mode);
-
-typedef struct stat Stat;
-#ifndef lint
-/* Prevent over-aggressive optimizers from eliminating ID string */
-const char jlss_id_mkpath_c[] = "@(#)$Id: mkpath.c,v 1.13 2012/07/15 00:40:37 jleffler Exp $";
-#endif /* lint */
 
 int main(int argc, char *argv[]) {
 	std::string paramFile = "config/radioconfig.lua";
 
-	// Parse parameters
+	// Parse commandline arguments.
 	if (argc > 2) {
 		showUsage();
 		exit(0);
@@ -46,6 +39,7 @@ int main(int argc, char *argv[]) {
 	try {
 		RadioRT_Parameters params;
 		parseParameters(paramFile, params);
+		FileManagement::makeDirectoryPath(params.outputDirectory);
 
 		RadioRT radio(params);
 		radio.run();
@@ -75,8 +69,6 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 		parseLuaVariable(luaState["Parameters"]["sampling"],              params.sampling);
 		parseLuaVariable(luaState["Parameters"]["dopplerShifted"],        params.dopplerShifted);
 		parseLuaVariable(luaState["Parameters"]["dopp_shift_phi_inc"],    params.doppShiftPhiIncr);
-
-		parseLuaVariable(luaState["Parameters"]["rbeam_degrees"],         params.rbeam_degrees);
 		parseLuaVariable(luaState["Parameters"]["distance"],              params.dist);
 		parseLuaVariable(luaState["Parameters"]["right_ascension"],       params.rightAscension);
 		parseLuaVariable(luaState["Parameters"]["declination"],           params.declination);
@@ -95,10 +87,6 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 		parseLuaVariable(luaState["Parameters"]["integratingFF"],         params.integratingFF);
 		parseLuaVariable(luaState["Parameters"]["integratingRL"],         params.integratingRL);
 		parseLuaVariable(luaState["Parameters"]["resolution_scale"],      params.resolutionScale);
-
-		int rc = mkpath(params.outputDirectory.c_str(), 0777);
-		if (rc != 0)
-			throw std::runtime_error("Failed to create directory tree: " + params.outputDirectory);
 
 		if (params.outputDirectory.back() != '/') {
 			params.outputDirectory += "/";
@@ -139,56 +127,4 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 
 void showUsage() {
 	std::cout << "Usage: radio [--config=<filename>]" << std::endl;
-}
-
-int do_mkdir(const char *path, mode_t mode)
-{
-	Stat            st;
-	int             status = 0;
-
-	if (stat(path, &st) != 0)
-	{
-		/* Directory does not exist. EEXIST for race condition */
-		if (mkdir(path, mode) != 0 && errno != EEXIST)
-			status = -1;
-	}
-	else if (!S_ISDIR(st.st_mode))
-	{
-		errno = ENOTDIR;
-		status = -1;
-	}
-
-	return(status);
-}
-
-/**
-** mkpath - ensure all directories in path exist
-** Algorithm takes the pessimistic view and works top-down to ensure
-** each directory in path exists, rather than optimistically creating
-** the last element and working backwards.
-*/
-int mkpath(const char *path, mode_t mode)
-{
-	char           *pp;
-	char           *sp;
-	int             status;
-	char           *copypath = strdup(path);
-
-	status = 0;
-	pp = copypath;
-	while (status == 0 && (sp = strchr(pp, '/')) != 0)
-	{
-		if (sp != pp)
-		{
-			/* Neither root nor double slash in path */
-			*sp = '\0';
-			status = do_mkdir(copypath, mode);
-			*sp = '/';
-		}
-		pp = sp + 1;
-	}
-	if (status == 0)
-		status = do_mkdir(path, mode);
-	free(copypath);
-	return (status);
 }

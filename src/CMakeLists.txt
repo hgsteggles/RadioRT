@@ -17,6 +17,7 @@ set(RADIO_SRCS
         ${CMAKE_CURRENT_SOURCE_DIR}/SplineData.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/Timer.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/WriteFITS2D.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/FileManagement.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/faddeeva/Faddeeva.cpp)
 
 include_directories("${RADIO_SOURCE_DIR}/lib")
