@@ -61,7 +61,7 @@ Parameters = {
 	integratingRL =              false,
 	resolution_scale =           2,
 }
-'''
+```
 
 #####Output
 The files `emeasure_ff.fits`, `intensity_pixel_ff.fits`, and `odepth_ff.fits` are created in the directory assigned to `output_directory` and contain the emission measure, intensity and optical depth maps of the data in the FITS format.
