@@ -62,9 +62,9 @@ void RadioRT::run() {
 
 	// Calculate frequencies.
 	std::vector<double> freqs;
-	double channelWidth = params.bandwidth/params.nchannels;
+	double channelWidth = params.bandwidth / params.nchannels;
 	for (int i = 0; i < params.nchannels; ++i)
-		freqs.push_back(params.frequency + (i + 0.5)*channelWidth - (params.bandwidth / 2.0));
+		freqs.push_back(params.frequency + (i + 0.5) * channelWidth - (params.bandwidth / 2.0));
 
 	// make the image on the plane of the sky and return it in the array image(npixels[0],npixels[1]) (units are erg/s/cm^2/Hz/ster).
 	// The opacity is returned in the array tau(npixels[0],npixels[1])
@@ -82,18 +82,18 @@ void RadioRT::run() {
 	if (params.geometry == "cylindrical")
 		data = raytracer.rayTraceAxiSymm(fluid, std::abs(theta_rad));
 	else
-		data = raytracer.rayTrace3D(fluid, theta_rad, phi_rad);
+		data = raytracer.rayTrace3D(fluid, std::abs(theta_rad), phi_rad);
 
 	if (params.theta < 90.0)
 		data.flip();
 
 	// Scale to correct units and work out total flux
-	double pixsize = data.fac*fluid.getDeltaX(); // pixel size [cm].
-	double pixrad = pixsize / (Units::milli()*params.dist*Converter::PC_2_CM(1)); // pixel size [radians].
+	double pixsize = data.fac * fluid.getDeltaX(); // pixel size [cm].
+	double pixrad = pixsize / (Units::milli() * params.dist * Converter::PC_2_CM(1)); // pixel size [radians].
 	double pixdeg = Converter::RAD_2_DEG(pixrad); // pixel size [degrees].
-	double pixarcm = pixdeg*60; // pixel size [arcminutes].
-	double pixarcs = pixarcm*60; // pixel size [arcseconds].
-	double pixmas = Units::milli()*pixarcs; // pixel size [milliarcseconds].
+	double pixarcm = pixdeg * 60.0; // pixel size [arcminutes].
+	double pixarcs = pixarcm * 60.0; // pixel size [arcseconds].
+	double pixmas = Units::milli() * pixarcs; // pixel size [milliarcseconds].
 
 	data.intensityFF *= Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad; //mJy
 	data.intensityRL *= Units::milli() * Converter::CGS_2_JY(1) * pixrad * pixrad;
