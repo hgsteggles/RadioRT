@@ -21,16 +21,15 @@ endif(APPLE)
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-configure_file(config/radioconfig.lua 
-				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/radioconfig.lua 
-				COPYONLY)
-configure_file(config/parameters.lua 
-				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/parameters.lua 
-				COPYONLY)
+function(copy_radio_config filename)
+	configure_file(${filename} 
+					${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${filename} 
+					COPYONLY)
+endfunction()
 
-configure_file(config/example-data.txt 
-				${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/config/example-data.txt 
-				COPYONLY)
+copy_radio_config(config/radio-config.lua)
+copy_radio_config(config/torch-config.lua)
+copy_radio_config(config/example-data.txt)
 
 add_subdirectory(lib/cfitsio)
 add_subdirectory(src)

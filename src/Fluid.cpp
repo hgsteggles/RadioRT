@@ -31,12 +31,12 @@ Fluid::Fluid(std::string filename, int ndims, const std::array<int, 3>& ncells, 
 
 	dx = sideLength / ncells[0];
 
-	for (int row = 0; row < ncells[0]*ncells[1]*ncells[2]; ++row) {
+	for (int row = 0; row < ncells[0] * ncells[1] * ncells[2]; ++row) {
 		for (int idim = 0; idim < ndims; ++idim)
 			myfile >> x0[idim];
-		int i = (int)(x0[0]/dx);
-		int j = (int)(x0[1]/dx);
-		int k = (int)(x0[2]/dx);
+		int i = (int)(x0[0] / dx);
+		int j = (int)(x0[1] / dx);
+		int k = (int)(x0[2] / dx);
 
 		if (i < 0 || j < 0 || k < 0 || i >= ncells[0] || j >= ncells[1] || k >= ncells[2]) {
 			throw std::runtime_error("Fluid::Fluid: Torch params and data have mismatched deltax.");

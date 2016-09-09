@@ -81,7 +81,7 @@ public:
 	void setLineOfSightVelocity(double vLOS);
 	void setDopplerIntMinPhiInc(double doppShiftPhiIncr);
 
-	RayTracerData rayTrace3D(Fluid& fluid, int k, double theta, double phi);
+	RayTracerData rayTrace3D(Fluid& fluid, double theta, double phi);
 	RayTracerData rayTraceAxiSymm(Fluid& fluid, double theta);
 
 private:

@@ -66,7 +66,7 @@ void RayTracer::setDopplerIntMinPhiInc(double doppShiftPhiIncr) {
 	this->doppShiftPhiIncr = doppShiftPhiIncr;
 }
 
-RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double phi) {
+RayTracerData RayTracer::rayTrace3D(Fluid& fluid, double theta, double phi) {
 	RayTracerData data;
 	if (integratingFF) {
 		data.fluxFF = DataCube(pixels[0], pixels[1], frequencies.size());
@@ -100,10 +100,14 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 
 	data.fac = 0.0;
 	for (int i = 0; i < 3; ++i)
-		data.fac += fluid.getNCells(i)*fluid.getNCells(i);
-	data.fac = std::sqrt(data.fac)/(double)std::min(pixels[0], pixels[1]);
+		data.fac += fluid.getNCells(i) * fluid.getNCells(i);
+	data.fac = std::sqrt(data.fac) / (double)std::min(pixels[0], pixels[1]);
 
-	double ds = 1.0/sampling;
+	double ds = 1.0 / sampling;
+
+	int ist = fluid.getNCells(0) / 2;
+	int jst = fluid.getNCells(1) / 2;
+	int kst = fluid.getNCells(2) / 2;
 
 	for (unsigned int ifreq = 0; ifreq < frequencies.size(); ++ifreq) {
 
@@ -112,13 +116,12 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 
 		for (int iu = 0; iu < pixels[0]; ++iu) {
 			// u coordinate of pixel in image plane.
-
-			double u = data.fac*(double(iu-pixels[0]/2) + 0.5);
+			double u = data.fac * (double(iu - pixels[0] / 2) + 0.5);
 
 			// loop through the vertical pixels of the image.
 			for (int iv = 0; iv < pixels[1]; iv++){
 				// v coordinate of pixel in image plane
-				double v = data.fac*(double(iv-pixels[1]/2) + 0.5);
+				double v = data.fac * (double(iv - pixels[1] / 2) + 0.5);
 
 				std::array<bool, 6> face;
 				// Initialize faces logical
@@ -132,9 +135,9 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 				// Determine the x,y,z coords of a position on the line of sight.
 				// To do this we can imagine that the origin of the image plane
 				// coincides with the origin of the hydro grid
-				double ax = u*std::cos(phi + Constants::PI()/2.0) + v*trig_th.cos()*std::cos(phi + Constants::PI());
-				double ay = u*std::sin(phi + Constants::PI()/2.0) + v*trig_th.cos()*std::sin(phi + Constants::PI());
-				double az = v*trig_th.sin();
+				double ax = u * trig_ph.sin() - v * trig_th.cos() * trig_ph.cos();
+				double ay = u * trig_ph.cos() + v * trig_th.cos() * trig_ph.sin();
+				double az = v * trig_th.sin();
 
 				// Now determine if the line of sight goes through the grid. Either it passes through 2 faces of the model grid, or through
 				// no faces. First we set the components for the line of sight (x,y,z coords for a point on the line (ad,bd,cd), and x,y,z
@@ -142,51 +145,59 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 				double ad = ax;               // )
 				double bd = ay;               // )- Point on the los, ad = a' etc
 				double cd = az;               // )
-				double add = trig_ph.cos()*trig_th.sin();   //  )
-				double bdd = trig_ph.sin()*trig_th.sin();   //  )- Direction vector of los, add = a" etc
+				double add = trig_ph.cos() * trig_th.sin();   //  )
+				double bdd = trig_ph.sin() * trig_th.sin();   //  )- Direction vector of los, add = a" etc
 				double cdd = trig_th.cos();          //  )
 
 				std::array<double, 6> tp, xi, yi, zi;
 
 				// For each face (plane), determine the intersection point with the line of sight
-				std::array<double, 6> kp = std::array<double, 6>{(double)fluid.getNCells(0), 0.0, (double)fluid.getNCells(1), 0.0, (double)fluid.getNCells(2), 0.0};
 
-				tp[0] = (kp[0] - ad)/add;
-				tp[1] = (kp[1] - ad)/add;
-				tp[2] = (kp[2] - bd)/bdd;
-				tp[3] = (kp[3] - bd)/bdd;
-				tp[4] = (kp[4] - cd)/cdd;
-				tp[5] = (kp[5] - cd)/cdd;
+				double xmin = -(double)ist;
+				double xmax = (double)(fluid.getNCells(0) - ist);
+				double ymin = -(double)jst;
+				double ymax = (double)(fluid.getNCells(1) - jst);
+				double zmin = -(double)kst;
+				double zmax = (double)(fluid.getNCells(2) - kst);
+
+				std::array<double, 6> kp = std::array<double, 6>{xmax, xmin, ymax, ymin, zmax, zmin};
+
+				tp[0] = (kp[0] - ad) / add;
+				tp[1] = (kp[1] - ad) / add;
+				tp[2] = (kp[2] - bd) / bdd;
+				tp[3] = (kp[3] - bd) / bdd;
+				tp[4] = (kp[4] - cd) / cdd;
+				tp[5] = (kp[5] - cd) / cdd;
 				for (int n = 0; n < 6; ++n) {
-					xi[n] = ad + tp[n]*add;
-					yi[n] = bd + tp[n]*bdd;
-					zi[n] = cd + tp[n]*cdd;
+					xi[n] = ad + tp[n] * add;
+					yi[n] = bd + tp[n] * bdd;
+					zi[n] = cd + tp[n] * cdd;
 				}
 
 				// For each of these intersection points, determine whether the point
 				// is within the bounds of each face. Modify the position by a small
 				// amount such that the starting position is just within the grid bounds
-				if ((yi[0] > 0) && (yi[0] < fluid.getNCells(1)) && (zi[0] > 0) && (zi[0] < fluid.getNCells(2))){
+				if ((yi[0] > ymin) && (yi[0] < ymax) && (zi[0] > zmin) && (zi[0] < zmax)){
 					xi[0] = fluid.getNCells(0) - 1.0e-4;
 					face[0] = true;
 				}
-				if ((yi[1] > 0) && (yi[1] < fluid.getNCells(1)) && (zi[1] > 0) && (zi[1] < fluid.getNCells(2))){
+				if ((yi[1] > ymin) && (yi[1] < ymax) && (zi[1] > zmin) && (zi[1] < zmax)){
 					xi[1] = 0 + 1.0e-4;
 					face[1] = true;
 				}
-				if ((xi[2] > 0) && (xi[2] < fluid.getNCells(0)) && (zi[2] > 0) && (zi[2] < fluid.getNCells(2))){
+				if ((xi[2] > xmin) && (xi[2] < xmax) && (zi[2] > zmin) && (zi[2] < zmax)){
 					yi[2] = fluid.getNCells(1) - 1.0e-4;
 					face[2] = true;
 				}
-				if ((xi[3] > 0) && (xi[3] < fluid.getNCells(0)) && (zi[3] > 0) && (zi[3] < fluid.getNCells(2))){
+				if ((xi[3] > xmin) && (xi[3] < xmax) && (zi[3] > xmin) && (zi[3] < zmax)){
 					yi[3] = 0 + 1.0e-4;
 					face[3] = true;
 				}
-				if ((xi[4] > 0) && (xi[4] < fluid.getNCells(0)) && (yi[4] > 0) && (yi[4] < fluid.getNCells(1))){
+				if ((xi[4] > xmin) && (xi[4] < xmax) && (yi[4] > ymin) && (yi[4] < ymax)){
 					zi[4] = fluid.getNCells(2) - 1.0e-4;
 					face[4] = true;
 				}
-				if ((xi[5] >0) && (xi[5] < fluid.getNCells(0)) && (yi[5] > 0) && (yi[5] < fluid.getNCells(1))){
+				if ((xi[5] > xmin) && (xi[5] < xmax) && (yi[5] > ymin) && (yi[5] < ymax)){
 					zi[5] = 0 + 1.0e-4;
 					face[5] = true;
 				}
@@ -202,8 +213,9 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 					}
 				}
 
-				if (ni == 0)
+				if (ni == 0) {
 					continue; // los misses model grid so next u,v pixel
+				}
 				if (ni != 2) {
 					// NOTE: subsequent use of this code has revealed that on rare occasions 3 intersection points through the faces
 					// are found. This is most likely due to numerical rounding. It might be possible to eliminate the incorrect value
@@ -220,30 +232,35 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 				// integrate from this point until the ray leaves the grid through the closer intersection point. Pick an imaginary point
 				// on the los (suitably removed from the model grid) and determine the distance of the intersections from this. The
 				// furthest intersection is where the los enters the model grid.
-				double tim = 10.0*std::max(fluid.getNCells(0),fluid.getNCells(1));
-				double xim = ad + tim*add;
-				double yim = bd + tim*bdd;
-				double zim = cd + tim*cdd;
-				double dist1 = std::pow(xi[facet[1]]-xim,2) + std::pow(yi[facet[1]]-yim,2) + std::pow(zi[facet[1]]-zim,2);
-				double dist2 = std::pow(xi[facet[2]]-xim,2) + std::pow(yi[facet[2]]-yim,2) + std::pow(zi[facet[2]]-zim,2);
+				double tim = 10.0 * std::max(fluid.getNCells(0), fluid.getNCells(1));
+				double xim = ad + tim * add;
+				double yim = bd + tim * bdd;
+				double zim = cd + tim * cdd;
+				double dist1 = std::pow(xi[facet[0]] - xim, 2) 
+								+ std::pow(yi[facet[0]] - yim, 2) 
+								+ std::pow(zi[facet[0]] - zim, 2);
+				double dist2 = std::pow(xi[facet[1]] - xim, 2) 
+								+ std::pow(yi[facet[1]] - yim, 2) 
+								+ std::pow(zi[facet[1]] - zim, 2);
 
 				// los enters through point 1 or point 2.
-				double x = (dist2 < dist1) ? xi[facet[1]] : xi[facet[2]];
-				double y = (dist2 < dist1) ? yi[facet[1]] : yi[facet[2]];
-				double z = (dist2 < dist1) ? zi[facet[1]] : zi[facet[2]];
+				double x = (dist2 < dist1) ? xi[facet[0]] : xi[facet[1]];
+				double y = (dist2 < dist1) ? yi[facet[0]] : yi[facet[1]];
+				double z = (dist2 < dist1) ? zi[facet[0]] : zi[facet[1]];
 
 				// los wants to enter into the following grid cells (because we have normalized grid.ncells[0] etc by the cell size we do not need
 				// to divide by the cell size here). Checked index is correct! (27/11/08)
-				int ix = (x < 0.0) ? int(x)-1 : int(x);
-				int jy = (y < 0.0) ? int(y)-1 : int(y);
-				int kz = (z < 0.0) ? int(z)-1 : int(z);
+				int ix = (x < 0.0) ? int(x) - 1 : int(x);
+				int jy = (y < 0.0) ? int(y) - 1 : int(y);
+				int kz = (z < 0.0) ? int(z) - 1 : int(z);
 
-				int i = ix;
-				int j = jy;
-				int k = kz;
+				int i = ix + ist;
+				int j = jy + jst;
+				int k = kz + kst;
 
-				if ((i<0) || (i >= fluid.getNCells(0)) || (j<0) || (j >= fluid.getNCells(1)) || (k < 0) || (k >= fluid.getNCells(2)))
+				if ((i < 0) || (i >= fluid.getNCells(0)) || (j < 0) || (j >= fluid.getNCells(1)) || (k < 0) || (k >= fluid.getNCells(2))) {
 					continue; // actually off grid
+				}
 
 				Cell const & cell = fluid.getCell(i, j, k);
 				// now do the integration
@@ -255,17 +272,19 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, int k, double theta, double ph
 						fluid.getRecombinationLine().update(cell, ds, frequencies[ifreq]);
 
 					// calculate new position along line of sight, and new cell index
-					x = x + ds*trig_ph.cos()*trig_th.sin();
-					y = y + ds*trig_ph.sin()*trig_th.sin();
-					z = z + ds*trig_th.cos();
+					x = x + ds * trig_ph.cos() * trig_th.sin();
+					y = y + ds * trig_ph.sin() * trig_th.sin();
+					z = z + ds * trig_th.cos();
 
-					i = int(x);
-					j = int(y);
-					k = int(z);
+					i = int(x) + ist;
+					j = int(y) + jst;
+					k = int(z) + kst;
 
 					// has the l.o.s. reached the edge of the grid ? if so, set ok = false to terminate loop.
 
-					if ((i < 0)||(i >= fluid.getNCells(0))||(j < 0)||(j>=fluid.getNCells(1))||(k<0)||(k>=fluid.getNCells(2)))
+					if ((i < 0) || (i >= fluid.getNCells(0)) 
+						|| (j < 0) || (j >= fluid.getNCells(1)) 
+						|| (k < 0) || (k >= fluid.getNCells(2)))
 						break;
 				}
 

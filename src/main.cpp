@@ -14,7 +14,7 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params);
 void showUsage();
 
 int main(int argc, char *argv[]) {
-	std::string paramFile = "config/radioconfig.lua";
+	std::string paramFile = "config/radio-config.lua";
 
 	// Parse commandline arguments.
 	if (argc > 2) {
@@ -120,8 +120,8 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 			throw std::runtime_error("parseParameters: spherical geometry can only have 1 dimension.");
 		}
 
-		if (params.geometry != "cylindrical")
-			throw std::runtime_error("parseParameters: only cylindrical geometry supported.");
+		if (params.geometry != "cylindrical" && params.geometry != "cartesian")
+			throw std::runtime_error("parseParameters: " + params.geometry + " geometry not supported.");
 	}
 }
 

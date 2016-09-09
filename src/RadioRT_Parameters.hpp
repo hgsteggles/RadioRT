@@ -32,7 +32,6 @@ public:
 	double sideLength = 0;
 
 	// Data params.
-	double rbeam_degrees = 0;
 	double dist = 0; //!< Distance to source [kpc].
 	double rightAscension = 0; //!< Right ascension of source.
 	double declination = 0; //!< Left ascension of source.

@@ -37,7 +37,7 @@ void RadioRT::run() {
 	Fluid fluid(params.inputfile, params.ndims, params.ncells, params.sideLength);
 	if (params.integratingRL) {
 		fluid.updateLineData(params.nlevel, params.frequency, params.turb_broad);
-		fluid.updateDepartureCoeffs("refdata/bsubn.txt");
+		fluid.updateDepartureCoeffs("config/bsubn.txt");
 	}
 
 	if (params.theta < -90.0 || params.theta > 90.0)
@@ -64,7 +64,7 @@ void RadioRT::run() {
 	std::vector<double> freqs;
 	double channelWidth = params.bandwidth/params.nchannels;
 	for (int i = 0; i < params.nchannels; ++i)
-		freqs.push_back(params.frequency + (i + 0.5)*channelWidth - (params.bandwidth/2.0));
+		freqs.push_back(params.frequency + (i + 0.5)*channelWidth - (params.bandwidth / 2.0));
 
 	// make the image on the plane of the sky and return it in the array image(npixels[0],npixels[1]) (units are erg/s/cm^2/Hz/ster).
 	// The opacity is returned in the array tau(npixels[0],npixels[1])
@@ -81,6 +81,8 @@ void RadioRT::run() {
 	RayTracerData data;
 	if (params.geometry == "cylindrical")
 		data = raytracer.rayTraceAxiSymm(fluid, std::abs(theta_rad));
+	else
+		data = raytracer.rayTrace3D(fluid, theta_rad, phi_rad);
 
 	if (params.theta < 90.0)
 		data.flip();

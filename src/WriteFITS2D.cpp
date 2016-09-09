@@ -112,13 +112,9 @@ void WriteFITS::wfits(std::string filename, std::string units, const DataCube& c
 	fits_update_key(fitsptr, TDOUBLE, "CDELT4", &stokes, "Unity", &status );
 
 	double epoch = 2000.000;
-	double bmaj = 2.0*params.rbeam_degrees;
-	double bmin = 2.0*params.rbeam_degrees;
 	double bpa  = 0.0;
 	fits_update_key(fitsptr,TDOUBLE,"EPOCH",&epoch,"EPOCH",&status);
 	fits_update_key(fitsptr,TDOUBLE,"EQUINOX",&epoch,"EQUINOX",&status);
-	fits_update_key(fitsptr,TDOUBLE,"BMAJ" ,&bmaj,"FWFM (deg)",&status);
-	fits_update_key(fitsptr,TDOUBLE,"BMIN" ,&bmin,"FWFM (deg)",&status);
 	fits_update_key(fitsptr,TDOUBLE,"BPA"  ,&bpa,"PA (radians)",&status);
 
 	char * units_writable = new char[units.size() + 1];
