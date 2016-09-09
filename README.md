@@ -69,7 +69,6 @@ The files `emeasure_ff.fits`, `intensity_pixel_ff.fits`, and `odepth_ff.fits` ar
 This image of the intensity map was exported from ds9:
 
 ![IntensityImage](intensity_pixel_ff.png)
-\[Image exported from ds9.\]
 
 ####Compiling
 
