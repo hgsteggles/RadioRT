@@ -25,6 +25,7 @@ You can specify your own configuration file:
 ```bash
 ./radio --config=/path/to/radio-config.lua
 ```  
+The `-s` flag can also be passed to run the program silently (only error messages will appear on the console).  
 
 #####Setup
 
@@ -89,27 +90,27 @@ export CXX=/path/to/g++
 ####Advanced Usage
 | Parameter                     | Notes                                     |
 | :---------------------------- | :---------------------------------------- |
-| ```torch_params_filename```   | Filename of TORCH config file with the parameters used to run the simulation of the input data. |
-| ```torch_data_filename```     | Filename of the input data (output data of TORCH). |
-| ```output_directory```        | The output directory. |
-| ```sampling```                | Number of integration steps per cell width along a ray. |
-| ```dopplerShifted```          | Include doppler shifting of lines? |
-| ```dopp_shift_phi_inc```      | Increment in azimuthal angle (in degrees) when calculating doppler shifts across cell in a cylindrical grid. |
-| ```distance```                | Distance to source (units of kpc). |
-| ```right_ascension```         | Right ascension of source. |
-| ```declination```             | Declination of source. |
-| ```theta```                   | Angle, in degrees, of line of sight to the z-axis of the model grid (theta = 0 is the N-pole and theta = 90 is in the equitorial plane). |
-| ```phi```                     | Angle of projected line of sight on the x-y plane to the x-axis of the model grid (phi = 0 is viewing along x-axis). |
-| ```frequency```               | Observing frequency in Hertz. |
-| ```bandwidth```               | Oberving bandwidth in Hertz. |
-| ```nchannels```               | Number of frequency bins observed. |
-| ```nlevel```                  | Final level number of the recombination line. |
-| ```stokes```                  | Stokes parameter. |
-| ```turb_broadening```         | Turbulent broadening of line. |
-| ```vLOS```                    | Line of sight velocity of source. |
-| ```integratingFF```           | Integrate radio continuum intensity? |
-| ```integratingRL```           | Integrate radio recombination line intensity? |
-| ```resolution_scale```        | The resolution scale of the image grid wrt to the model grid. |
+| `torch_params_filename`   | Filename of TORCH config file with the parameters used to run the simulation of the input data. |
+| `torch_data_filename`     | Filename of the input data (output data of TORCH). |
+| `output_directory`        | The output directory. |
+| `sampling`                | Number of integration steps per cell width along a ray. |
+| `dopplerShifted`          | Include doppler shifting of lines? |
+| `dopp_shift_phi_inc`      | Increment in azimuthal angle (in degrees) when calculating doppler shifts across cell in a cylindrical grid. |
+| `distance`                | Distance to source (units of kpc). |
+| `right_ascension`         | Right ascension of source. |
+| `declination`             | Declination of source. |
+| `theta`                   | Angle, in degrees, of line of sight to the z-axis of the model grid (theta = 0 is the N-pole and theta = 90 is in the equitorial plane). |
+| `phi`                     | Angle of projected line of sight on the x-y plane to the x-axis of the model grid (phi = 0 is viewing along x-axis). |
+| `frequency`               | Observing frequency in Hertz. |
+| `bandwidth`               | Oberving bandwidth in Hertz. |
+| `nchannels`               | Number of frequency bins observed. |
+| `nlevel`                  | Final level number of the recombination line. |
+| `stokes`                  | Stokes parameter. |
+| `turb_broadening`         | Turbulent broadening of line. |
+| `vLOS`                    | Line of sight velocity of source. |
+| `integratingFF`           | Integrate radio continuum intensity? |
+| `integratingRL`           | Integrate radio recombination line intensity? |
+| `resolution_scale`        | The resolution scale of the image grid wrt to the model grid. |
 
 ### Goals 
 * Incorporate RRL_Departure code.
