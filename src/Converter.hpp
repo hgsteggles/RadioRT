@@ -35,8 +35,6 @@ public:
 	static double MO_2_G(double val_in_mo);
 	static double DEG_2_RAD(double val_in_deg);
 	static double RAD_2_DEG(double val_in_rad);
-
-	void printInfo();
 private:
 	double M, L, T;
 	double convertCodeUnits(const double val, const double mass_index, const double length_index, const double time_index, const bool& from) const;

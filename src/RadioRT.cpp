@@ -113,7 +113,5 @@ void RadioRT::run() {
 		WriteFITS::wfits(params.outputDirectory + "emeasure_rl", "cm**6/pc", data.emissionMeasureRL, params, pixdeg, pixsize, fluid.getDeltaX());
 		WriteFITS::wfits(params.outputDirectory + "intensity_pixel_rl", "mJy/pixel", data.fluxRL, params, pixdeg, pixsize, fluid.getDeltaX(), data.intensityRL);
 	}
-
-	std::cout << "Progam time taken: " << timer.formatTime(timer.getTicks()) << std::endl;
 }
 

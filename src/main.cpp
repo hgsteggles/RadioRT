@@ -10,14 +10,15 @@
 
 #include "selene/include/selene.h"
 
-void parseParameters(const std::string& filename, RadioRT_Parameters& params);
 void showUsage();
+void parseParameters(const std::string& filename, RadioRT_Parameters& params);
 
 int main(int argc, char *argv[]) {
+	bool silent = false;
 	std::string paramFile = "config/radio-config.lua";
 
 	// Parse commandline arguments.
-	if (argc > 2) {
+	if (argc > 3) {
 		showUsage();
 		exit(0);
 	}
@@ -25,9 +26,12 @@ int main(int argc, char *argv[]) {
 		for (int iarg = 1; iarg < argc; ++iarg) {
 			std::string arg = argv[iarg];
 			std::string prefix1("--config=");
+			std::string prefix2("-s");
 
 			if (!arg.compare(0, prefix1.size(), prefix1))
 				paramFile = arg.substr(prefix1.size()).c_str();
+			else if (!arg.compare(0, prefix2.size(), prefix2))
+				silent = true;
 			else {
 				showUsage();
 				exit(0);
@@ -35,19 +39,40 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Run program.
+	std::unique_ptr<LogPolicyInterface> consoleLogPolicy 
+		= std::unique_ptr<ConsoleLogPolicy>(new ConsoleLogPolicy());
+	consoleLogPolicy->setLogLevel(silent ? SeverityType::ERROR : SeverityType::DEBUG);
+	Logger::Instance().registerLogPolicy("console", std::move(consoleLogPolicy));
+
+	RadioRT_Parameters params;
+
 	try {
-		RadioRT_Parameters params;
 		parseParameters(paramFile, params);
 		FileManagement::makeDirectoryPath(params.outputDirectory);
+		FileManagement::makeDirectoryPath(params.outputDirectory + "/log");
 
+		std::unique_ptr<LogPolicyInterface> fileLogPolicy 
+			= std::unique_ptr<FileLogPolicy>(
+				  new FileLogPolicy(params.outputDirectory + "/log/radio.log")
+			  );
+		fileLogPolicy->setLogLevel(SeverityType::NOTICE);
+		Logger::Instance().registerLogPolicy("file", std::move(fileLogPolicy));
+	}
+	catch (std::exception& e) {
+		Logger::Instance().print<SeverityType::FATAL_ERROR>(e.what());
+		return 0;
+	}
+
+	// Run program.
+	try {
 		RadioRT radio(params);
 		radio.run();
 	}
 	catch (std::exception& e) {
-		Logger<FileLogPolicy>::Instance().print<SeverityType::FATAL_ERROR>(e.what());
-		Logger<ConsoleLogPolicy>::Instance().print<SeverityType::FATAL_ERROR>(e.what());
-		std::cout << "See radio.log for more details." << std::endl;
+		Logger::Instance().print<SeverityType::FATAL_ERROR>(e.what());
+
+		std::cout << "See " << params.outputDirectory << "/log/radio.log for more details." << std::endl;
+		return 0;
 	}
 
 	return 0;
@@ -126,5 +151,5 @@ void parseParameters(const std::string& filename, RadioRT_Parameters& params) {
 }
 
 void showUsage() {
-	std::cout << "Usage: radio [--config=<filename>]" << std::endl;
+	std::cout << "Usage: radio [-s] [--config=<filename>]" << std::endl;
 }

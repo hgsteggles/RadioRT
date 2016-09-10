@@ -50,9 +50,6 @@ Fluid::Fluid(std::string filename, int ndims, const std::array<int, 3>& ncells, 
 	}
 	myfile.close();
 
-	Logger<ConsoleLogPolicy>::Instance().print<SeverityType::DEBUG>("Fluid data read in: ncells = (",
-																	ncells[0], ", ", ncells[1], ", ", ncells[2], ").");
-
 	for (int i = 0; i < ncells[0]; ++i) {
 		for (int j = 0; j < ncells[1]; ++j) {
 			for (int k = 0; k < ncells[2]; ++k) {

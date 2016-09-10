@@ -31,10 +31,8 @@ void parseLuaVariable(sel::Selector selector, T& var) {
 		var = (T) selector;
 	}
 	else {
-		Logger<ConsoleLogPolicy>::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default.");
-		Logger<FileLogPolicy>::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default.");
+		Logger::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default: ", var, '\n');
 	}
-	Logger<FileLogPolicy>::Instance().print<SeverityType::DEBUG>(selector.getName(), ": ", var);
 }
 
 template<>
@@ -43,10 +41,8 @@ void parseLuaVariable(sel::Selector selector, std::string& var) {
 		var = parseString(selector);
 	}
 	else {
-		Logger<ConsoleLogPolicy>::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default.");
-		Logger<FileLogPolicy>::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default.");
+		Logger::Instance().print<SeverityType::WARNING>("parseLuaVariable: <", selector.getName(), "> does not exist, using default.\n");
 	}
-	Logger<FileLogPolicy>::Instance().print<SeverityType::DEBUG>(selector.getName(), ": ", var);
 }
 
 

@@ -8,8 +8,10 @@
 #include "RayTracer.hpp"
 #include "Constants.hpp"
 #include "Fluid.hpp"
-#include "ProgressBar.hpp"
 #include "RecombinationLine.hpp"
+
+#include "ProgressBar.hpp"
+#include "Logger.hpp"
 
 void RayTracerData::flip() {
 	fluxFF.flip();
@@ -108,6 +110,9 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, double theta, double phi) {
 	int ist = fluid.getNCells(0) / 2;
 	int jst = fluid.getNCells(1) / 2;
 	int kst = fluid.getNCells(2) / 2;
+
+	Logger::Instance().print<SeverityType::NOTICE>("RayTracing...\n");
+	ProgressBar progBar(frequencies.size() * pixels[0], 1000);
 
 	for (unsigned int ifreq = 0; ifreq < frequencies.size(); ++ifreq) {
 
@@ -220,12 +225,13 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, double theta, double phi) {
 					// NOTE: subsequent use of this code has revealed that on rare occasions 3 intersection points through the faces
 					// are found. This is most likely due to numerical rounding. It might be possible to eliminate the incorrect value
 					// in such cases.
-					std::cout << "Unphysical number of intersections\n";
-					std::cout << "iu = " << iu << ", iv = " << iv << "\n";
-					std::cout << "ni = " << ni << "\n";
+					std::stringstream ss;
+					ss << "RayTracer::rayTrace3D: unphysical number of intersections.\n";
+					ss << "\tiu = " << iu << ", iv = " << iv << "\n";
+					ss << "\tni = " << ni << "\n";
 					for (int n = 0; n < ni; n++)
-						std::cout << facet[n] << "\n";
-					exit(0);
+						ss << '\t' << facet[n] << "\n";
+					throw std::runtime_error(ss.str());
 				}
 
 				// Continue if there are two intersections. Determine at which intersection the line of sight enters the grid, and then
@@ -303,8 +309,16 @@ RayTracerData RayTracer::rayTrace3D(Fluid& fluid, double theta, double phi) {
 					data.intensityRL += fluid.getRecombinationLine().getIntensity();
 				}
 			} // v loop in image grid
+
+			if (progBar.timeToUpdate()) {
+				progBar.update(ifreq * pixels[0] + iu);
+				Logger::Instance().print<SeverityType::INFO>(progBar.getFullString(), "\r");
+			}
 		} // u loop in image grid
 	} // freq loop in image grid
+
+	progBar.end();
+	Logger::Instance().print<SeverityType::NOTICE>(progBar.getFinalString(), '\n');
 
 	return data;
 }
@@ -370,7 +384,8 @@ RayTracerData RayTracer::rayTraceAxiSymm(Fluid& fluid, double theta) {
 
 	int jst = nsamples[1]*trig_th.cos()/(2.0*data.fac*sampling) - pixels[1]/2;
 
-	ProgressBar progBar(frequencies.size()*xpixels2, 5, "RayTracing", false);
+	Logger::Instance().print<SeverityType::NOTICE>("RayTracing...\n");
+	ProgressBar progBar(frequencies.size() * xpixels2, 1000);
 
 	for (unsigned int ifreq = 0; ifreq < frequencies.size(); ++ifreq) {
 		for (int i = 1; i <= xpixels2; ++i) {
@@ -525,9 +540,16 @@ RayTracerData RayTracer::rayTraceAxiSymm(Fluid& fluid, double theta) {
 					}
 				}
 			}
-			progBar.update(ifreq*xpixels2 + i);
+
+			if (progBar.timeToUpdate()) {
+				progBar.update(ifreq * xpixels2 + i);
+				Logger::Instance().print<SeverityType::INFO>(progBar.getFullString(), "\r");
+			}
 		}
 	}
+
+	progBar.end();
+	Logger::Instance().print<SeverityType::NOTICE>(progBar.getFinalString(), '\n');
 
 	return data;
 }

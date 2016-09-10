@@ -96,14 +96,6 @@ double gaunt(double tem, double charge, double freq) {
 	//eg Hummer (1988) and Grant (1958)
 
 	//use the asymptotic formula of Menzel & Perkeris (see Hummer 1988)
-	/*
-	std::cout << "Warning: gaunt factor not calculated properly." << std::endl;
-	std::cout << "u = " << u << std::endl;
-	std::cout << "f = " << freq << std::endl;
-	std::cout << "T = " << tem << std::endl;
-	std::cout << "gamma2 = " << gamma2 << std::endl;
-	exit(0);
-	*/
 	return 1.0;
 	return 1.0 + 0.1728*std::pow(u/gamma2,0.3333)*(1.0+2.0/u) - 0.0496*(u/gamma2,0.6667)*(1.0 + (0.6667/u) + 1.3333/(u*u));
 }

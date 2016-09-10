@@ -108,12 +108,6 @@ double Converter::RAD_2_DEG(double val_in_rad) {
 	return val_in_rad/DEG_2_RAD(1.0);
 }
 
-void Converter::printInfo() {
-	std::cout << "M = " << M << "\n";
-	std::cout << "L = " << L << "\n";
-	std::cout << "T = " << T << "\n";
-}
-
 double Units::yotta() { return 1.0e-24;}
 double Units::zetta() { return 1.0e-21;}
 double Units::exa() { return 1.0e-18;}

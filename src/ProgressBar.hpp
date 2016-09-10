@@ -10,13 +10,9 @@
 #ifndef PROGRESSBAR_HPP_
 #define PROGRESSBAR_HPP_
 
-#include "Timer.hpp"
-
 #include <stdint.h>
 #include <chrono>
 #include <string>
-
-static double dummy_checkpoint;
 
 /**
  * @class ProgressBar
@@ -28,27 +24,39 @@ static double dummy_checkpoint;
 class ProgressBar
 {
 public:
-	static int messageSpace;
-	ProgressBar(double tmax, int cpoint, const std::string msg, bool debug);
-	bool update(double timeCurrent, bool output_on = true, double& dt_nextCheckpoint = dummy_checkpoint);
-	void end(bool output_on);
-	void reset(double tmax, int cpoint, const std::string msg);
+	ProgressBar(double maxVal, int logPeriodMillis);
+
+	bool timeToUpdate();
+	void update(double currentVal);
+	void end();
+
+	std::string getFullString();
+	std::string getFinalString();
+	std::string getBarString();
+	std::string getPercentDoneString();
+	std::string getTimeLeftString();
+	std::string getTimeTakenString();
+
 private:
-	Timer timer;
 	typedef std::chrono::steady_clock Clock;
 	typedef Clock::time_point time_point;
 	typedef Clock::period period;
 	typedef std::chrono::duration<float, period> duration;
-	double timeTotal;
-	int checkpoint;
-	std::string messageProgress;
-	double percentProgress;
-	int checkpointProgress;
+
+	std::string durationToString(duration time_left);
+
+	bool isStarting;
+	double maxVal;
+	double currentPercent;
+	int logPeriod;
+
+	int barWidth;
+
+	time_point clockStart;	
 	time_point clockLast;
 	duration speedEMA;
+	duration timeLeft;
 	double smoothing;
-	bool isStarting;
-	bool debugging;
 };
 
 #endif //PROGRESSBAR_HPP_
