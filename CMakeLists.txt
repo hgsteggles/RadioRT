@@ -34,6 +34,7 @@ function(copy_radio_config filename)
 					COPYONLY)
 endfunction()
 
+copy_radio_config(config/bsubn.txt)
 copy_radio_config(config/radio-config.lua)
 copy_radio_config(config/torch-config.lua)
 copy_radio_config(config/example-data.txt)
