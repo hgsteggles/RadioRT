@@ -179,8 +179,14 @@ void Fluid::updateDepartureCoeffs(const std::string& filename) {
 					Cell &cell = cells(i, j, k);
 
 					double nh = cell.massFractions[SPECIES::H] * cell.density / mp;
-					double bn = bsubnSpline2D.interpolate(cell.temperature, nh);
-					double bnp1 = bsubnp1Spline2D.interpolate(cell.temperature, nh);
+					try {
+						cell.bn = bsubnSpline2D.interpolate(cell.temperature, nh);
+						cell.bnp1 = bsubnp1Spline2D.interpolate(cell.temperature, nh);
+					}
+					catch (std::exception& e) {
+						cell.bn = 1.0;
+						cell.bnp1 = 1.0;
+					}
 				}
 			}
 		}
