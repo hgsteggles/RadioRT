@@ -134,8 +134,10 @@ void Fluid::updateLineData(int nlevel, double freq0, double turb_broad) {
 				double ion[] = {1.0, 2.0, 3.0, 6.0};  //assumed ionization levels
 				double ne = ion[0] * npl[0] + ion[1] * npl[1] + ion[2] * npl[2] + ion[3] * npl[3];
 
-				double Nn = Nn_coeff * std::pow(kb * tem, -1.5) * nhii * ne * std::exp(chi / (kb * tem));
+				double Nn = Nn_coeff * std::pow(kb * tem, -1.5) * nhii * ne * std::exp(-chi / (kb * tem));
+
 				cell.absorption_l_coeff = absorption_l_coeff * Nn * (1.0 - std::exp(-h * freq0 / (kb * tem)));
+
 				cell.sigma = std::sqrt(0.5 * (freq0 / c) * (freq0 / c)
 									   * ((2 * kb * cell.temperature / mp) + turb_broad * turb_broad));
 			}

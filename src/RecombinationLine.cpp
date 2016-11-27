@@ -67,7 +67,7 @@ void RecombinationLine::update(const Cell& cell, double ds, double freq) {
 	emission_l *= cell.bnp1;
 	absorption_l *= cell.bn*beta;
 
-	double S = (emission_ff + emission_l)/(absorption_ff + absorption_l);
+	double S = (emission_ff == 0 && emission_l == 0) ? 0 : (emission_ff + emission_l)/(absorption_ff + absorption_l);
 
 	double dtau = (absorption_l + absorption_ff)*ds*cell.dx;
 	tau += dtau;
