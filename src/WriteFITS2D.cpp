@@ -33,11 +33,14 @@ void WriteFITS::wfits(std::string filename, std::string units, const DataCube& c
 	double *z = new double[cube.sizex()*cube.sizey()*cube.sizez()];
 
 	double image_max = 0;
+	double image_min = cube(0, 0, 0);
 	for (unsigned int k = 0, num = 0; k < cube.sizez(); ++k) {
 		for (unsigned int j = 0; j < cube.sizey(); ++j) {
 			for (unsigned int i = 0; i < cube.sizex(); ++i) {
-				z[num] = cube(i, j, k);
-				image_max = std::max(image_max, z[num++]);
+				z[num++] = cube(i, j, k);
+
+				image_max = std::max(image_max, cube(i, j, k));
+				image_min = std::min(image_min, cube(i, j, k));
 			}
 		}
 	}
@@ -88,52 +91,53 @@ void WriteFITS::wfits(std::string filename, std::string units, const DataCube& c
 
 	double channelWidth = params.bandwidth/params.nchannels;
 
-	fits_update_key(fitsptr, TSTRING, "CTYPE1", ctype1, "Axis type", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CDELT1", &mpixs, "Axis coordinate increment (deg)", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRPIX1", &crpix1, "Axis coordinate reference pixel",  &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRVAL1", &params.rightAscension, "Axis coordinate value at CRPIX", &status );
-	fits_update_key(fitsptr, TSTRING, "CTYPE2", ctype2, "Axis type", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CDELT2", &pixs, "Axis coordinate increment (deg)", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRPIX2", &crpix2, "Axis coordinate reference pixel", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRVAL2", &params.declination, "Axis coordinate value at CRPIX", &status );
+	fits_update_key(fitsptr, TSTRING, "CTYPE1", ctype1, "Axis type", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CDELT1", &mpixs, "Axis coordinate increment (deg)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRPIX1", &crpix1, "Axis coordinate reference pixel",  &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRVAL1", &params.rightAscension, "Axis coordinate value at CRPIX", &status);
+	fits_update_key(fitsptr, TSTRING, "CTYPE2", ctype2, "Axis type", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CDELT2", &pixs, "Axis coordinate increment (deg)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRPIX2", &crpix2, "Axis coordinate reference pixel", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRVAL2", &params.declination, "Axis coordinate value at CRPIX", &status);
 
-	double nchannels = params.nchannels;
+	double channelRef = params.nchannels / 2.0;
 
-	fits_update_key(fitsptr, TSTRING, "CTYPE3", ctype3,"Axis type", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CDELT3", &channelWidth,"Channel width (Hz)",&status);
-	fits_update_key(fitsptr, TDOUBLE, "CRPIX3", &nchannels,"Number of Channels",&status );
-	fits_update_key(fitsptr, TDOUBLE, "CRVAL3", &params.frequency,"Obs Frequency (Hz)", &status );
+	fits_update_key(fitsptr, TSTRING, "CTYPE3", ctype3,"Axis type", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CDELT3", &channelWidth,"Channel width (Hz)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRPIX3", &channelRef,"Axi coordinate reference channel", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRVAL3", &params.frequency,"Obs Frequency (Hz)", &status);
 
 	double stokes = params.stokes;
 
-	fits_update_key(fitsptr, TSTRING, "CTYPE4", ctype4, "Axis type", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRVAL4", &stokes, "Unity", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CRPIX4", &stokes, "Unity", &status );
-	fits_update_key(fitsptr, TDOUBLE, "CDELT4", &stokes, "Unity", &status );
+	fits_update_key(fitsptr, TSTRING, "CTYPE4", ctype4, "Axis type", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRVAL4", &stokes, "Unity", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CRPIX4", &stokes, "Unity", &status);
+	fits_update_key(fitsptr, TDOUBLE, "CDELT4", &stokes, "Unity", &status);
 
 	double epoch = 2000.000;
 	double bpa  = 0.0;
-	fits_update_key(fitsptr,TDOUBLE,"EPOCH",&epoch,"EPOCH",&status);
-	fits_update_key(fitsptr,TDOUBLE,"EQUINOX",&epoch,"EQUINOX",&status);
-	fits_update_key(fitsptr,TDOUBLE,"BPA"  ,&bpa,"PA (radians)",&status);
+	fits_update_key(fitsptr, TDOUBLE, "EPOCH", &epoch, "EPOCH", &status);
+	fits_update_key(fitsptr, TDOUBLE, "EQUINOX", &epoch, "EQUINOX", &status);
+	fits_update_key(fitsptr, TDOUBLE, "BPA", &bpa, "PA (radians)", &status);
 
 	char * units_writable = new char[units.size() + 1];
 	std::copy(units.begin(), units.end(), units_writable);
 	units_writable[units.size()] = '\0'; // don't forget the terminating 0
-	fits_update_key(fitsptr,TSTRING,"BUNIT", units_writable, "Units", &status );
+	fits_update_key(fitsptr,TSTRING,"BUNIT", units_writable, "Units", &status);
 
-	fits_update_key(fitsptr,TINT,"Samples",&params.sampling,"Samples per cell",&status);
-	fits_update_key(fitsptr,TDOUBLE,"Theta",&params.theta,"Inclination (deg)",&status);
-	fits_update_key(fitsptr,TDOUBLE,"Phi",&params.phi,"Azimuth (deg)",&status);
-	fits_update_key(fitsptr,TDOUBLE,"Freq",&params.frequency,"Frequency (Hz)",&status);
-	fits_update_key(fitsptr,TDOUBLE,"Dist",&params.dist,"Distance (kpc)",&status);
-	fits_update_key(fitsptr,TDOUBLE,"PIXCM",&pixsize,"Pixel size (cm)",&status);
-	double pixarc = pixdeg*60.0*60.0;
-	fits_update_key(fitsptr,TDOUBLE,"PIXAS",&pixarc,"Axes coordinate increment (arcsec)",&status);
+	fits_update_key(fitsptr, TINT, "Samples", &params.sampling, "Samples per cell", &status);
+	fits_update_key(fitsptr, TDOUBLE, "Theta", &params.theta, "Inclination (deg)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "Phi", &params.phi, "Azimuth (deg)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "RESTFREQ", &params.frequency, "Frequency (Hz)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "Dist", &params.dist, "Distance (kpc)", &status);
+	fits_update_key(fitsptr, TDOUBLE, "PIXCM", &pixsize, "Pixel size (cm)", &status);
+	double pixarc = pixdeg * 60.0 * 60.0;
+	fits_update_key(fitsptr, TDOUBLE, "PIXAS", &pixarc, "Axes coordinate increment (arcsec)", &status);
 	std::string mpix_label = "Brightest Pixel (" + units + ")";
-	fits_update_key(fitsptr,TDOUBLE,"MPIX",&image_max,mpix_label.c_str(),&status);
+	fits_update_key(fitsptr, TDOUBLE, "DATAMIN", &image_min, mpix_label.c_str(), &status);
+	fits_update_key(fitsptr, TDOUBLE, "DATAMAX", &image_max, mpix_label.c_str(), &status);
 	if (total >= 0) {
-		fits_update_key(fitsptr,TDOUBLE,"TOTAL",&total, "Total",&status);
+		fits_update_key(fitsptr, TDOUBLE, "TOTAL", &total, "Total", &status);
 	}
 
 	//  Write the 1-D array, cunningly stored in the same way as a 2-D
